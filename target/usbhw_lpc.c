@@ -657,15 +657,40 @@ BOOL USBHwInit(void)
     USBCLKCFG = 5; /* 288 MHz / 48 MHz = 6 */
 
 #ifdef LPC2378_PORTB
+    sdlkjslkdf
     USBClkCtrl = (1 << 1) | (1 << 3) | (1 << 4); /* Enable the clocks */
     while (!(USBClkSt & ((1 << 1) | (1 << 3) | (1 << 4))));
     USBPortSel = 0x3; /* Set LPC to use USB Port B pins */
 #else
+  sldkjfsldkfj
     USBClkCtrl = (1 << 1) | (1 << 4); /* Enable the clocks */
     while (!(USBClkSt & ((1 << 1) | (1 << 4))));
 #endif
 
 #endif
+
+#ifdef LPC17xx
+      // P2.9 -> USB_CONNECT
+      LPC_PINCON->PINSEL4 &= ~0x000C0000;
+      LPC_PINCON->PINSEL4 |= 0x00040000;
+
+      // P1.18 -> USB_UP_LED
+      // P1.30 -> VBUS
+      LPC_PINCON->PINSEL3 &= ~0x30000030;
+      LPC_PINCON->PINSEL3 |= 0x20000010;
+
+      // P0.29 -> USB_D+
+      // P0.30 -> USB_D-
+      LPC_PINCON->PINSEL1 &= ~0x3C000000;
+      LPC_PINCON->PINSEL1 |= 0x14000000;
+
+
+      // enable PUSB
+      LPC_SC->PCONP |= (1 << 31);
+
+      LPC_USB->USBClkCtrl = 0x1A;	                  /* Dev clock, AHB clock enable  */
+      while ((LPC_USB->USBClkSt & 0x1A) != 0x1A);
+#endif // LPC17xx
 
     // disable/clear all interrupts for now
     LPC_USB->USBDevIntEn = 0;
