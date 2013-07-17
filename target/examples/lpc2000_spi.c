@@ -34,6 +34,7 @@
 #include "spi.h"
 /*****************************************************************************/
 
+#define MAX(x,y)       ((x)>(y)?(x):(y))       /**< MAX */
 
 // SP0SPCR  Bit-Definitions
 #define CPHA    (1<<3)
@@ -68,7 +69,7 @@ void SPISetSpeed(int iFrequency)
 	iDivider = MAX(4, iDivider);
 	// set it
 	S0SPCCR = iDivider << 1;
-	
+
 	DBG("Configured SPI0 for %d kHz\n", iClock / (1000 * iDivider));
 }
 
@@ -82,7 +83,7 @@ void SPIInit(void)
 	UNSELECT_CARD();
 	SPI_IODIR |= (1 << SPI_SS_PIN);
 
-	// reset Pin-Functions  
+	// reset Pin-Functions
 	HalPinSelect(SPI_SCK_PIN,	1);	// SPI
 	HalPinSelect(SPI_MISO_PIN,	1);	// SPI
 	HalPinSelect(SPI_MOSI_PIN,	1);	// SPI
@@ -121,7 +122,7 @@ void SPITransfer(int iCount, uint8_t *pbTxData, uint8_t *pbRxData)
 void SPITick(int iCount)
 {
 	int i;
-	
+
 	UNSELECT_CARD();
 	for (i = 0; i < iCount; i++) {
 		S0SPDR = SPI_IDLE_CHAR;

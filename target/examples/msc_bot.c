@@ -1,5 +1,5 @@
 /*
-	LPCUSB, an USB device driver for LPC microcontrollers	
+	LPCUSB, an USB device driver for LPC microcontrollers
 	Copyright (C) 2006 Bertrik Sikken (bertrik@sikken.nl)
 
 	Redistribution and use in source and binary forms, with or without
@@ -16,7 +16,7 @@
 	THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 	IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 	OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-	IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, 
+	IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
 	INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
 	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
 	DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
@@ -28,7 +28,7 @@
 /**	@file
 
 	Bulk-only-transfer layer for mass storage.
-	
+
 	This layers sits between the generic USB layers and the SCSI layer
 	and performs data transfer according to the BOT protocol.
 */
@@ -74,6 +74,10 @@ typedef enum {
 	eStalled
 } EBotState;
 
+#define MAX(x,y)       ((x)>(y)?(x):(y))       /**< MAX */
+#ifndef MIN
+#define MIN(a,b)	((a)<(b)?(a):(b))
+#endif
 
 #define CBW_SIGNATURE	0x43425355		/**< magic word in CBW */
 #define CSW_SIGNATURE	0x53425355		/**< magic word in CSW */
@@ -109,15 +113,15 @@ void MSCBotReset(void)
 
 /**
 	Prepares a CSW, to be sent on next bulk-IN interrupt
-		
+
 	@param [in]	bStatus	CSW status
  */
 static void SendCSW(uint8_t bStatus)
 {
 	int iResidue;
-	
+
 	iResidue = CBW.dwCBWDataTransferLength - dwTransferSize;
-	
+
 	// construct CSW
 	CSW.dwCSWSignature		= CSW_SIGNATURE;
 	CSW.dwCSWTag 			= CBW.dwCBWTag;
@@ -133,10 +137,10 @@ static void SendCSW(uint8_t bStatus)
 
 /**
 	Checks if CBW is valid and meaningful
-		
+
 	@param [in]	pCBW	Command block wrapper
 	@param [in]	iLen	Length of CBW
-			
+
 	@return true if valid and meaningful
  */
 static bool CheckCBW(TCBW *pCBW, int iLen)
@@ -168,7 +172,7 @@ static bool CheckCBW(TCBW *pCBW, int iLen)
 	BOTStall
 	========
 		Local function to stall ongoing transfer
-		
+
 	Which endpoint to stall is determined by looking at the transfer
 	direction intended by the host.
 
@@ -190,12 +194,12 @@ static void BOTStall(void)
 	HandleDataIn
 	============
 		Handles data from device-to-host
-		
+
 **************************************************************************/
 static void HandleDataIn(void)
 {
 	int iChunk;
-	
+
 	// process data for host in SCSI layer
 	pbData = SCSIHandleData(CBW.CBWCB, CBW.bCBWCBLength, pbData, dwOffset);
 	if (pbData == NULL) {
@@ -210,7 +214,7 @@ static void HandleDataIn(void)
 		USBHwEPWrite(MSC_BULK_IN_EP, pbData, iChunk);
 		dwOffset += iChunk;
 	}
-	
+
 	// are we done now?
 	if (dwOffset == dwTransferSize) {
 		if (dwOffset != CBW.dwCBWDataTransferLength) {
@@ -228,12 +232,12 @@ static void HandleDataIn(void)
 	HandleDataOut
 	=============
 		Handles data from host-to-device
-		
+
 **************************************************************************/
 static void HandleDataOut(void)
 {
 	int iChunk;
-	
+
 	if (dwOffset < dwTransferSize) {
 		// get data from host
 		iChunk = USBHwEPRead(MSC_BULK_OUT_EP, pbData, dwTransferSize - dwOffset);
@@ -246,7 +250,7 @@ static void HandleDataOut(void)
 		}
 		dwOffset += iChunk;
 	}
-	
+
 	// are we done now?
 	if (dwOffset == dwTransferSize) {
 		if (dwOffset != CBW.dwCBWDataTransferLength) {
@@ -257,20 +261,20 @@ static void HandleDataOut(void)
 		SendCSW(STATUS_PASSED);
 	}
 }
-		
-		
+
+
 /**
 	Handles the BOT bulk OUT endpoint
-		
+
 	@param [in]	bEP			Endpoint number
 	@param [in]	bEPStatus	Endpoint status (indicates NAK, STALL, etc)
-		
+
  */
 void MSCBotBulkOut(uint8_t bEP, uint8_t bEPStatus)
 {
 	int 	iLen, iChunk;
 	bool	fHostIn, fDevIn;
-	
+
 	// ignore events on stalled EP
 	if (bEPStatus & EP_STATUS_STALLED) {
 		return;
@@ -289,21 +293,21 @@ void MSCBotBulkOut(uint8_t bEP, uint8_t bEPStatus)
 			eState = eStalled;
 			break;
 		}
-		
+
 		DBG("CBW: len=%d, flags=%x, cmd=%x, cmdlen=%d\n",
 			CBW.dwCBWDataTransferLength, CBW.bmCBWFlags, CBW.CBWCB[0], CBW.bCBWCBLength);
-		
+
 		dwOffset = 0;
 		dwTransferSize = 0;
 		fHostIn = ((CBW.bmCBWFlags & 0x80) != 0);
-		
+
 		// verify request
 		pbData = SCSIHandleCmd(CBW.CBWCB, CBW.bCBWCBLength, &iLen, &fDevIn);
 		if (pbData == NULL) {
 			// unknown command
 			BOTStall();
 			SendCSW(STATUS_FAILED);
-			break;			
+			break;
 		}
 
 		// rule: if device and host disagree on direction, send CSW with status 2
@@ -335,23 +339,23 @@ void MSCBotBulkOut(uint8_t bEP, uint8_t bEPStatus)
 			eState = eDataOut;
 		}
 		break;
-		
+
 	case eDataOut:
 		HandleDataOut();
 		break;
-		
+
 	case eDataIn:
 	case eCSW:
 		iChunk = USBHwEPRead(bEP, NULL, 0);
 		DBG("Phase error in state %d, %d bytes\n", eState, iChunk);
 		eState = eCBW;
 		break;
-	
+
 	case eStalled:
 		// keep stalling
 		USBHwEPStall(MSC_BULK_OUT_EP, true);
 		break;
-		
+
 	default:
 		DBG("Invalid state %d\n", eState);
 		ASSERT(false);
@@ -362,10 +366,10 @@ void MSCBotBulkOut(uint8_t bEP, uint8_t bEPStatus)
 
 /**
 	Handles the BOT bulk IN endpoint
-		
+
 	@param [in]	bEP			Endpoint number
 	@param [in]	bEPStatus	Endpoint status (indicates NAK, STALL, etc)
-		
+
  */
 void MSCBotBulkIn(uint8_t bEP, uint8_t bEPStatus)
 {
@@ -375,27 +379,27 @@ void MSCBotBulkIn(uint8_t bEP, uint8_t bEPStatus)
 	}
 
 	switch (eState) {
-	
+
 	case eCBW:
 	case eDataOut:
 		// ignore possibly old ACKs
 		break;
-	
+
 	case eDataIn:
 		HandleDataIn();
 		break;
-	
+
 	case eCSW:
 		// wait for an IN token, then send the CSW
 		USBHwEPWrite(MSC_BULK_IN_EP, (uint8_t *)&CSW, 13);
 		eState = eCBW;
 		break;
-		
+
 	case eStalled:
 		// keep stalling
 		USBHwEPStall(MSC_BULK_IN_EP, true);
 		break;
-		
+
 	default:
 		DBG("Invalid state %d\n", eState);
 		ASSERT(false);
