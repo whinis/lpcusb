@@ -24,8 +24,9 @@
 	2006, Bertrik Sikken, modified for LPCUSB
 */
 
-#include "type.h"
 #include "debug.h"
+#include <stdint.h>
+#include <stddef.h>
 
 #include "lpc214x.h"
 #include "hal.h"
@@ -93,7 +94,7 @@ void SPIInit(void)
 
 /*****************************************************************************/
 
-void SPITransfer(int iCount, U8 *pbTxData, U8 *pbRxData)
+void SPITransfer(int iCount, uint8_t *pbTxData, uint8_t *pbRxData)
 {
 	int i;
 

@@ -37,8 +37,9 @@
 	This example can be used to measure USB transfer speed.
 */
 
-#include "type.h"
 #include "debug.h"
+#include <stdbool.h>
+#include <stddef.h>
 
 #include "hal.h"
 #include "console.h"
@@ -53,7 +54,7 @@
 #define LE_WORD(x)		((x)&0xFF),((x)>>8)
 
 
-static const U8 abDescriptors[] = {
+static const uint8_t abDescriptors[] = {
 
 /* Device descriptor */
 	0x12,              		
@@ -134,16 +135,16 @@ static const U8 abDescriptors[] = {
 
 
 typedef struct {
-	U32		dwAddress;
-	U32		dwLength;
+	uint32_t		dwAddress;
+	uint32_t		dwLength;
 } TMemoryCmd;
 
 
 static TMemoryCmd	MemoryCmd;
-static U8			abVendorReqData[sizeof(TMemoryCmd)];
+static uint8_t			abVendorReqData[sizeof(TMemoryCmd)];
 
 
-static void _HandleBulkIn(U8 bEP, U8 bEPStatus)
+static void _HandleBulkIn(uint8_t bEP, uint8_t bEPStatus)
 {
 	int iChunk;
 	
@@ -154,7 +155,7 @@ static void _HandleBulkIn(U8 bEP, U8 bEPStatus)
 	}
 	
 	// send next part
-	USBHwEPWrite(bEP, (U8 *)MemoryCmd.dwAddress, iChunk);
+	USBHwEPWrite(bEP, (uint8_t *)MemoryCmd.dwAddress, iChunk);
 	
 	MemoryCmd.dwAddress += iChunk;
 	MemoryCmd.dwLength -= iChunk;
@@ -164,7 +165,7 @@ static void _HandleBulkIn(U8 bEP, U8 bEPStatus)
 }
 
 
-static void _HandleBulkOut(U8 bEP, U8 bEPStatus)
+static void _HandleBulkOut(uint8_t bEP, uint8_t bEPStatus)
 {
 	int iChunk;
 	
@@ -190,11 +191,11 @@ static void _HandleBulkOut(U8 bEP, U8 bEPStatus)
 				0x02 = prepare memory write
 	* index:	ignored
 	* value:	ignored
-	* data:		U32 dwAddress
-				U32 dwLength
+	* data:		uint32_t dwAddress
+				uint32_t dwLength
 		
 **************************************************************************/
-static BOOL HandleVendorRequest(TSetupPacket *pSetup, int *piLen, U8 **ppbData)
+static bool HandleVendorRequest(TSetupPacket *pSetup, int *piLen, uint8_t **ppbData)
 {
 	TMemoryCmd	*pCmd;
 	
@@ -220,9 +221,9 @@ static BOOL HandleVendorRequest(TSetupPacket *pSetup, int *piLen, U8 **ppbData)
 
 	default:
 		DBG("Unhandled class %X\n", pSetup->bRequest);
-		return FALSE;
+		return false;
 	}
-	return TRUE;
+	return true;
 }
 
 
@@ -266,7 +267,7 @@ int main(void)
 	DBG("Starting USB communication\n");
 
 	// connect to bus
-	USBHwConnect(TRUE);
+	USBHwConnect(true);
 
 	// call USB interrupt handler continuously
 	while (1) {

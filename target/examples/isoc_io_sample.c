@@ -40,7 +40,9 @@ second, as well as receive the incrementing output counter.
 */
 
 #include <string.h>			// memcpy
-#include "type.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include "debug.h"
 #ifdef LPC214x
 #include "lpc214x.h"
@@ -72,27 +74,27 @@ second, as well as receive the incrementing output counter.
 
 #define BYTES_PER_ISOC_FRAME 4
 
-__attribute__ ((aligned(4))) U32 inputIsocDataBuffer[(BYTES_PER_ISOC_FRAME/4)];
+__attribute__ ((aligned(4))) uint32_t inputIsocDataBuffer[(BYTES_PER_ISOC_FRAME/4)];
 
 #define ISOC_OUTPUT_DATA_BUFFER_SIZE 1024
-volatile U8 outputIsocDataBuffer[ISOC_OUTPUT_DATA_BUFFER_SIZE];
+volatile uint8_t outputIsocDataBuffer[ISOC_OUTPUT_DATA_BUFFER_SIZE];
 
 int isConnectedFlag = 0;
 
-U8 bDevStat = 0;
+uint8_t bDevStat = 0;
 
 #define	INT_VECT_NUM	0
 
 #define IRQ_MASK 0x00000080
 
 
-//static U8 abBulkBuf[64];
-static U8 abClassReqData[8];
+//static uint8_t abBulkBuf[64];
+static uint8_t abClassReqData[8];
 
 // forward declaration of interrupt handler
 static void USBIntHandler(void) __attribute__ ((interrupt(IRQ), naked));
 
-static const U8 abDescriptors[] = {
+static const uint8_t abDescriptors[] = {
 
 // device descriptor
 	0x12,
@@ -176,9 +178,9 @@ static const U8 abDescriptors[] = {
 	@param [out] piLen
 	@param [out] ppbData
  */
-static BOOL HandleClassRequest(TSetupPacket *pSetup, int *piLen, U8 **ppbData)
+static bool HandleClassRequest(TSetupPacket *pSetup, int *piLen, uint8_t **ppbData)
 {
-	return TRUE;
+	return true;
 }
 
 
@@ -255,7 +257,7 @@ void USBIntHandler(void)
  */
 
 int delay = 0;
-void USBFrameHandler(U16 wFrame)
+void USBFrameHandler(uint16_t wFrame)
 {
     // send over USB
 	if( isConnectedFlag ) {
@@ -301,7 +303,7 @@ void USBFrameHandler(U16 wFrame)
 	
 	Resets state machine when a USB reset is received.
  */
-static void USBDevIntHandler(U8 bDevStatus)
+static void USBDevIntHandler(uint8_t bDevStatus)
 {
 	if ((bDevStatus & DEV_STATUS_RESET) != 0) {
 	}
@@ -390,7 +392,7 @@ int main(void)
 	enableIRQ();
 
 	// connect to bus
-	USBHwConnect(TRUE);
+	USBHwConnect(true);
 	
 	int x = 0;
 		

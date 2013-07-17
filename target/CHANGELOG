@@ -99,7 +99,7 @@ v20060603
 	* Removed installable descriptor handler (is now called directly)
 	* Added standard request handler hook (through USBRegisterCustomReqHandler)
 	* usbhw_lpc.c: Updated USBHwEPRead API: now takes an extra argument for maximum length
-	* usbhw_lpc.c: Updated USBHwEPRead/USBHeEPWrite API: now returns int (number of bytes) instead of BOOL
+	* usbhw_lpc.c: Updated USBHwEPRead/USBHeEPWrite API: now returns int (number of bytes) instead of bool
 
 	20060415, bertrik
 	* updated data storage for control transfers, each handler now provides its own.

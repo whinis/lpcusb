@@ -25,8 +25,10 @@
 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "type.h"
 #include "debug.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 #include "hal.h"
 #include "console.h"
@@ -40,15 +42,15 @@
 
 #define REPORT_SIZE			4
 
-static U8	abClassReqData[4];
-static U8	abReport[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+static uint8_t	abClassReqData[4];
+static uint8_t	abReport[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
 static int	_iIdleRate = 0;
 static int	_iFrame = 0;
 
 
 
 // see the joystick example from the usb.org HID Descriptor Tool
-static U8 abReportDesc[] = {
+static uint8_t abReportDesc[] = {
 	0x05, 0x01,
 	0x15, 0x00,
 	0x09, 0x04,
@@ -91,7 +93,7 @@ static U8 abReportDesc[] = {
 };
 
 
-static const U8 abDescriptors[] = {
+static const uint8_t abDescriptors[] = {
 
 /* Device descriptor */
 	0x12,              		
@@ -178,9 +180,9 @@ static const U8 abDescriptors[] = {
 		HID class request handler
 		
 **************************************************************************/
-static BOOL HandleClassRequest(TSetupPacket *pSetup, int *piLen, U8 **ppbData)
+static bool HandleClassRequest(TSetupPacket *pSetup, int *piLen, uint8_t **ppbData)
 {
-	U8	*pbData = *ppbData;
+	uint8_t	*pbData = *ppbData;
 
 	switch (pSetup->bRequest) {
 	
@@ -199,9 +201,9 @@ static BOOL HandleClassRequest(TSetupPacket *pSetup, int *piLen, U8 **ppbData)
 
 	default:
 		DBG("Unhandled class %X\n", pSetup->bRequest);
-		return FALSE;
+		return false;
 	}
-	return TRUE;
+	return true;
 }
 
 
@@ -216,9 +218,9 @@ static BOOL HandleClassRequest(TSetupPacket *pSetup, int *piLen, U8 **ppbData)
 	This function tries to service any HID specific requests.
 		
 **************************************************************************/
-static BOOL HIDHandleStdReq(TSetupPacket *pSetup, int *piLen, U8 **ppbData)
+static bool HIDHandleStdReq(TSetupPacket *pSetup, int *piLen, uint8_t **ppbData)
 {
-	U8	bType, bIndex;
+	uint8_t	bType, bIndex;
 
 	if ((pSetup->bmRequestType == 0x81) &&			// standard IN request for interface
 		(pSetup->bRequest == REQ_GET_DESCRIPTOR)) {	// get descriptor
@@ -240,13 +242,13 @@ static BOOL HIDHandleStdReq(TSetupPacket *pSetup, int *piLen, U8 **ppbData)
 		    return USBGetDescriptor(pSetup->wValue, pSetup->wIndex, piLen, ppbData);
 		}
 		
-		return TRUE;
+		return true;
 	}
-	return FALSE;
+	return false;
 }
 
 
-static void HandleFrame(U16 wFrame)
+static void HandleFrame(uint16_t wFrame)
 {
 	static int iCount;
 
@@ -302,7 +304,7 @@ int main(void)
 	DBG("Starting USB communication\n");
 
 	// connect to bus
-	USBHwConnect(TRUE);
+	USBHwConnect(true);
 
 	// call USB interrupt handler continuously
 	while (1) {

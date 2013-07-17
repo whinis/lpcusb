@@ -40,7 +40,8 @@ second, as well as receive the incrementing output counter.
 */
 
 #include <string.h>			// memcpy
-#include "type.h"
+#include <stdbool.h>
+#include <stddef.h>
 #include "debug.h"
 #ifdef LPC214x
 #include "lpc214x.h"
@@ -76,41 +77,41 @@ second, as well as receive the incrementing output counter.
 #define ISOC_OUTPUT_DATA_BUFFER_SIZE (BYTES_PER_ISOC_FRAME * NUM_ISOC_FRAMES)
 
 
-volatile U8 outputIsocDataBuffer[ISOC_OUTPUT_DATA_BUFFER_SIZE];
+volatile uint8_t outputIsocDataBuffer[ISOC_OUTPUT_DATA_BUFFER_SIZE];
 
 
-__attribute__ ((section (".usbdma"), aligned(4))) volatile U32* udcaHeadArray[32];
-__attribute__ ((section (".usbdma"), aligned(4))) volatile U32 inputDmaDescriptor[5];
-__attribute__ ((section (".usbdma"), aligned(4))) U32 inputIsocFrameArray[NUM_ISOC_FRAMES];
-__attribute__ ((section (".usbdma"), aligned(4))) U8 inputIsocDataBuffer[ISOC_INPUT_DATA_BUFFER_SIZE];
+__attribute__ ((section (".usbdma"), aligned(4))) volatile uint32_t* udcaHeadArray[32];
+__attribute__ ((section (".usbdma"), aligned(4))) volatile uint32_t inputDmaDescriptor[5];
+__attribute__ ((section (".usbdma"), aligned(4))) uint32_t inputIsocFrameArray[NUM_ISOC_FRAMES];
+__attribute__ ((section (".usbdma"), aligned(4))) uint8_t inputIsocDataBuffer[ISOC_INPUT_DATA_BUFFER_SIZE];
 
 
-__attribute__ ((section (".usbdma"), aligned(4))) volatile U32 outputDmaDescriptor[5];
-__attribute__ ((section (".usbdma"), aligned(128))) U32 outputIsocFrameArray[NUM_ISOC_FRAMES];
-__attribute__ ((section (".usbdma"), aligned(128))) volatile U8 outputIsocDataBuffer[ISOC_OUTPUT_DATA_BUFFER_SIZE];
+__attribute__ ((section (".usbdma"), aligned(4))) volatile uint32_t outputDmaDescriptor[5];
+__attribute__ ((section (".usbdma"), aligned(128))) uint32_t outputIsocFrameArray[NUM_ISOC_FRAMES];
+__attribute__ ((section (".usbdma"), aligned(128))) volatile uint8_t outputIsocDataBuffer[ISOC_OUTPUT_DATA_BUFFER_SIZE];
 
 
 
-U16 commonIsocFrameNumber = 1;
+uint16_t commonIsocFrameNumber = 1;
 
 
 
 int isConnectedFlag = 0;
 
-U8 bDevStat = 0;
+uint8_t bDevStat = 0;
 
 #define	INT_VECT_NUM	0
 
 #define IRQ_MASK 0x00000080
 
 
-//static U8 abBulkBuf[64];
-static U8 abClassReqData[8];
+//static uint8_t abBulkBuf[64];
+static uint8_t abClassReqData[8];
 
 // forward declaration of interrupt handler
 static void USBIntHandler(void) __attribute__ ((interrupt(IRQ), naked));
 
-static const U8 abDescriptors[] = {
+static const uint8_t abDescriptors[] = {
 
 // device descriptor
 	0x12,
@@ -194,9 +195,9 @@ static const U8 abDescriptors[] = {
 	@param [out] piLen
 	@param [out] ppbData
  */
-static BOOL HandleClassRequest(TSetupPacket *pSetup, int *piLen, U8 **ppbData)
+static bool HandleClassRequest(TSetupPacket *pSetup, int *piLen, uint8_t **ppbData)
 {
-	return TRUE;
+	return true;
 }
 
 
@@ -264,13 +265,13 @@ void USBIntHandler(void)
 
 
 void resetDMATransfer(
-		const U8 endpointNumber,
-		volatile U32 *dmaDescriptor,
-		U32 *isocFrameArray,
-		const U32 numIsocFrames, 
-		const U32 bytesPerIsocFrame,
-		U16 *isocFrameNumber,
-		const U32 maxPacketSize,
+		const uint8_t endpointNumber,
+		volatile uint32_t *dmaDescriptor,
+		uint32_t *isocFrameArray,
+		const uint32_t numIsocFrames, 
+		const uint32_t bytesPerIsocFrame,
+		uint16_t *isocFrameNumber,
+		const uint32_t maxPacketSize,
 		void *dataBuffer
 		) 
 {
@@ -314,7 +315,7 @@ int resetCount = 0;
 int didOutputInit = 0;
 unsigned int incrementingNumberCounter = 0;
 
-void USBFrameHandler(U16 wFrame)
+void USBFrameHandler(uint16_t wFrame)
 {
     // send over USB
 	if( isConnectedFlag ) {
@@ -379,7 +380,7 @@ void USBFrameHandler(U16 wFrame)
 	
 	Resets state machine when a USB reset is received.
  */
-static void USBDevIntHandler(U8 bDevStatus)
+static void USBDevIntHandler(uint8_t bDevStatus)
 {
 	if ((bDevStatus & DEV_STATUS_RESET) != 0) {
 	}
@@ -463,7 +464,7 @@ int main(void)
 	enableIRQ();
 
 	// connect to bus
-	USBHwConnect(TRUE);
+	USBHwConnect(true);
 	
 	int x = 0;
 		

@@ -30,7 +30,6 @@
 	USB stack initialisation
  */
 
-#include "type.h"
 #include "debug.h"
 
 #include "usbhw_lpc.h"
@@ -38,7 +37,7 @@
 
 
 /** data storage area for standard requests */
-static U8	abStdReqData[8];
+static uint8_t	abStdReqData[8];
 
 
 /**
@@ -46,7 +45,7 @@ static U8	abStdReqData[8];
 	
 	@param [in] bDevStatus	Device status
  */
-static void HandleUsbReset(U8 bDevStatus)
+static void HandleUsbReset(uint8_t bDevStatus)
 {
 	if (bDevStatus & DEV_STATUS_RESET) {
 		DBG("\n!");
@@ -58,9 +57,9 @@ static void HandleUsbReset(U8 bDevStatus)
 	Initialises the USB hardware and sets up the USB stack by
 	installing default callbacks.
 	
-	@return TRUE if initialisation was successful
+	@return true if initialisation was successful
  */
-BOOL USBInit(void)
+bool USBInit(void)
 {
 	// init hardware
 	USBHwInit();
@@ -79,6 +78,6 @@ BOOL USBInit(void)
 	// register standard request handler
 	USBRegisterRequestHandler(REQTYPE_TYPE_STANDARD, USBHandleStandardRequest, abStdReqData);
 
-	return TRUE;
+	return true;
 }
 

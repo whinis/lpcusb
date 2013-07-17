@@ -34,8 +34,10 @@
 */
 
 #include <string.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
-#include "type.h"
 #include "debug.h"
 
 #include "usbapi.h"
@@ -46,21 +48,21 @@
 
 /** Command block wrapper structure */
 typedef struct {
-	U32		dwCBWSignature;
-	U32		dwCBWTag;
-	U32		dwCBWDataTransferLength;
-	U8		bmCBWFlags;
-	U8		bCBWLun;
-	U8		bCBWCBLength;
-	U8		CBWCB[16];
+	uint32_t		dwCBWSignature;
+	uint32_t		dwCBWTag;
+	uint32_t		dwCBWDataTransferLength;
+	uint8_t		bmCBWFlags;
+	uint8_t		bCBWLun;
+	uint8_t		bCBWCBLength;
+	uint8_t		CBWCB[16];
 } TCBW;
 
 /** Command status wrapper structure */
 typedef struct {
-	U32		dwCSWSignature;
-	U32		dwCSWTag;
-	U32		dwCSWDataResidue;
-	U8		bmCSWStatus;
+	uint32_t		dwCSWSignature;
+	uint32_t		dwCSWTag;
+	uint32_t		dwCSWDataResidue;
+	uint8_t		bmCSWStatus;
 } TCSW;
 
 /** States of BOT state machine */
@@ -80,15 +82,15 @@ typedef enum {
 #define STATUS_FAILED		0x01		/**< failed transfer */
 #define STATUS_PHASE_ERR	0x02		/**< conflict between host and device */
 
-static U32			dwTransferSize;		/**< total size of data transfer */
-static U32			dwOffset;			/**< offset in current data transfer */
+static uint32_t			dwTransferSize;		/**< total size of data transfer */
+static uint32_t			dwOffset;			/**< offset in current data transfer */
 
 static TCBW			CBW;
 static TCSW			CSW;
 
 static EBotState	eState;
 
-static U8			*pbData;
+static uint8_t			*pbData;
 
 
 
@@ -110,7 +112,7 @@ void MSCBotReset(void)
 		
 	@param [in]	bStatus	CSW status
  */
-static void SendCSW(U8 bStatus)
+static void SendCSW(uint8_t bStatus)
 {
 	int iResidue;
 	
@@ -135,30 +137,30 @@ static void SendCSW(U8 bStatus)
 	@param [in]	pCBW	Command block wrapper
 	@param [in]	iLen	Length of CBW
 			
-	@return TRUE if valid and meaningful
+	@return true if valid and meaningful
  */
-static BOOL CheckCBW(TCBW *pCBW, int iLen)
+static bool CheckCBW(TCBW *pCBW, int iLen)
 {
 	// CBW valid?
 	if (iLen != 31) {
 		DBG("Invalid length (%d)\n", iLen);
-		return FALSE;
+		return false;
 	}
 	if (pCBW->dwCBWSignature != CBW_SIGNATURE) {
 		DBG("Invalid signature %x\n", pCBW->dwCBWSignature);
-		return FALSE;
+		return false;
 	}
 
 	// CBW meaningful?
 	if (pCBW->bCBWLun != 0) {
 		DBG("Invalid LUN %d\n", pCBW->bCBWLun);
-		return FALSE;
+		return false;
 	}
 	if ((pCBW->bCBWCBLength < 1) || (pCBW->bCBWCBLength > 16)) {
 		DBG("Invalid CB len %d\n", pCBW->bCBWCBLength);
-		return FALSE;
+		return false;
 	}
-	return TRUE;
+	return true;
 }
 
 
@@ -175,11 +177,11 @@ static void BOTStall(void)
 {
 	if ((CBW.bmCBWFlags & 0x80) || (CBW.dwCBWDataTransferLength == 0)) {
 		// stall data-in or CSW
-		USBHwEPStall(MSC_BULK_IN_EP, TRUE);
+		USBHwEPStall(MSC_BULK_IN_EP, true);
 	}
 	else {
 		// stall data-out
-		USBHwEPStall(MSC_BULK_OUT_EP, TRUE);
+		USBHwEPStall(MSC_BULK_OUT_EP, true);
 	}
 }
 
@@ -264,10 +266,10 @@ static void HandleDataOut(void)
 	@param [in]	bEPStatus	Endpoint status (indicates NAK, STALL, etc)
 		
  */
-void MSCBotBulkOut(U8 bEP, U8 bEPStatus)
+void MSCBotBulkOut(uint8_t bEP, uint8_t bEPStatus)
 {
 	int 	iLen, iChunk;
-	BOOL	fHostIn, fDevIn;
+	bool	fHostIn, fDevIn;
 	
 	// ignore events on stalled EP
 	if (bEPStatus & EP_STATUS_STALLED) {
@@ -277,13 +279,13 @@ void MSCBotBulkOut(U8 bEP, U8 bEPStatus)
 	switch (eState) {
 
 	case eCBW:
-		iLen = USBHwEPRead(bEP, (U8 *)&CBW, sizeof(CBW));
+		iLen = USBHwEPRead(bEP, (uint8_t *)&CBW, sizeof(CBW));
 
 		// check if we got a good CBW
 		if (!CheckCBW(&CBW, iLen)) {
 			// see 6.6.1
-			USBHwEPStall(MSC_BULK_IN_EP, TRUE);
-			USBHwEPStall(MSC_BULK_OUT_EP, TRUE);
+			USBHwEPStall(MSC_BULK_IN_EP, true);
+			USBHwEPStall(MSC_BULK_OUT_EP, true);
 			eState = eStalled;
 			break;
 		}
@@ -347,12 +349,12 @@ void MSCBotBulkOut(U8 bEP, U8 bEPStatus)
 	
 	case eStalled:
 		// keep stalling
-		USBHwEPStall(MSC_BULK_OUT_EP, TRUE);
+		USBHwEPStall(MSC_BULK_OUT_EP, true);
 		break;
 		
 	default:
 		DBG("Invalid state %d\n", eState);
-		ASSERT(FALSE);
+		ASSERT(false);
 		break;
 	}
 }
@@ -365,7 +367,7 @@ void MSCBotBulkOut(U8 bEP, U8 bEPStatus)
 	@param [in]	bEPStatus	Endpoint status (indicates NAK, STALL, etc)
 		
  */
-void MSCBotBulkIn(U8 bEP, U8 bEPStatus)
+void MSCBotBulkIn(uint8_t bEP, uint8_t bEPStatus)
 {
 	// ignore events on stalled EP
 	if (bEPStatus & EP_STATUS_STALLED) {
@@ -385,18 +387,18 @@ void MSCBotBulkIn(U8 bEP, U8 bEPStatus)
 	
 	case eCSW:
 		// wait for an IN token, then send the CSW
-		USBHwEPWrite(MSC_BULK_IN_EP, (U8 *)&CSW, 13);
+		USBHwEPWrite(MSC_BULK_IN_EP, (uint8_t *)&CSW, 13);
 		eState = eCBW;
 		break;
 		
 	case eStalled:
 		// keep stalling
-		USBHwEPStall(MSC_BULK_IN_EP, TRUE);
+		USBHwEPStall(MSC_BULK_IN_EP, true);
 		break;
 		
 	default:
 		DBG("Invalid state %d\n", eState);
-		ASSERT(FALSE);
+		ASSERT(false);
 		break;
 	}
 }

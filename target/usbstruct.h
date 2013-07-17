@@ -1,5 +1,5 @@
 /*
-	LPCUSB, an USB device driver for LPC microcontrollers	
+	LPCUSB, an USB device driver for LPC microcontrollers
 	Copyright (C) 2006 Bertrik Sikken (bertrik@sikken.nl)
 
 	Redistribution and use in source and binary forms, with or without
@@ -16,7 +16,7 @@
 	THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 	IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 	OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-	IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, 
+	IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
 	INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
 	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
 	DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
@@ -33,17 +33,15 @@
 #ifndef _USBSTRUCT_H_
 #define _USBSTRUCT_H_
 
-
-#include "type.h"
-
+#include <stdint.h>
 
 /** setup packet definitions */
 typedef struct {
-	U8	bmRequestType;			/**< characteristics of the specific request */
-	U8	bRequest;				/**< specific request */
-	U16	wValue;					/**< request specific parameter */
-	U16	wIndex;					/**< request specific parameter */
-	U16	wLength;				/**< length of data transfered in data phase */
+	uint8_t	bmRequestType;			/**< characteristics of the specific request */
+	uint8_t	bRequest;				/**< specific request */
+	uint16_t	wValue;					/**< request specific parameter */
+	uint16_t	wIndex;					/**< request specific parameter */
+	uint16_t	wLength;				/**< length of data transfered in data phase */
 } TSetupPacket;
 
 
@@ -96,8 +94,8 @@ typedef struct {
 
 /** USB descriptor header */
 typedef struct {
-	U8	bLength;			/**< descriptor length */
-	U8	bDescriptorType;	/**< descriptor type */
+	uint8_t	bLength;			/**< descriptor length */
+	uint8_t	bDescriptorType;	/**< descriptor type */
 } TUSBDescHeader;
 
 #define DESC_DEVICE				1

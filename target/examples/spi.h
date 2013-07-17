@@ -25,11 +25,11 @@
 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "type.h"
+#include <stdint.h>
 
 void	SPIInit(void);
 void	SPISetSpeed(int iFrequency);
 
-void	SPITransfer(int iCount, U8 *pbTxData, U8 *pbRxData);
+void	SPITransfer(int iCount, uint8_t *pbTxData, uint8_t *pbRxData);
 void	SPITick(int iCount);
 

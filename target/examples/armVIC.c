@@ -11,7 +11,6 @@
  * notice remains intact.
  *
  *****************************************************************************/
-#include "type.h"
 #include "armVIC.h"
 
 #define IRQ_MASK 0x00000080

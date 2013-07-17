@@ -25,15 +25,14 @@
 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "type.h"
 #include "debug.h"
 
 #include "sdcard.h"
 #include "blockdev.h"
 
-static U32 getsdbits(U8 *buf, int offset, int len)
+static uint32_t getsdbits(uint8_t *buf, int offset, int len)
 {
-	U32		mask, data;
+	uint32_t		mask, data;
 	int		bytepos, bitpos;
 	int		shift;
 	
@@ -50,34 +49,34 @@ static U32 getsdbits(U8 *buf, int offset, int len)
 }
 
 
-BOOL BlockDevInit(void)
+bool BlockDevInit(void)
 {
 	return SDInit();
 }
 
 
-BOOL BlockDevWrite(U32 dwBlock, U8* pbBuf)
+bool BlockDevWrite(uint32_t dwBlock, uint8_t* pbBuf)
 {
 	return SDWriteBlock(pbBuf, dwBlock);
 }
 
 
-BOOL BlockDevRead(U32 dwBlock, U8* pbBuf)
+bool BlockDevRead(uint32_t dwBlock, uint8_t* pbBuf)
 {
 	return SDReadBlock(pbBuf, dwBlock);
 }
 
 
-BOOL BlockDevGetSize(U32 *pdwDriveSize)
+bool BlockDevGetSize(uint32_t *pdwDriveSize)
 {
-	U8	abBuf[16];
-	U32	c_size, num_blocks, block_size;
-	U16	read_bl_len;
-	U8	csd_structure, c_size_mult; 
+	uint8_t	abBuf[16];
+	uint32_t	c_size, num_blocks, block_size;
+	uint16_t	read_bl_len;
+	uint8_t	csd_structure, c_size_mult; 
 	
 	/* read CSD to determine block size and number of blocks */
 	if (!SDReadCSD(abBuf)) {
-		return FALSE;
+		return false;
 	}
 	csd_structure =	getsdbits(abBuf, 127, 2);
 	switch (csd_structure) {
@@ -98,10 +97,10 @@ BOOL BlockDevGetSize(U32 *pdwDriveSize)
 		
 	default:
 		DBG("Invalid CSD structure (%d)!\n", csd_structure);
-		return FALSE;
+		return false;
 	}
 
 	*pdwDriveSize = num_blocks * block_size;
-	return TRUE;
+	return true;
 }
 

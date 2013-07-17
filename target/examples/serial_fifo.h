@@ -25,18 +25,19 @@
 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "type.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 #define VCOM_FIFO_SIZE	128
 
 typedef struct {
 	int		head;
 	int 	tail;
-	U8		*buf;
+	uint8_t		*buf;
 } fifo_t;
 
-void fifo_init(fifo_t *fifo, U8 *buf);
-BOOL fifo_put(fifo_t *fifo, U8 c);
-BOOL fifo_get(fifo_t *fifo, U8 *pc);
+void fifo_init(fifo_t *fifo, uint8_t *buf);
+bool fifo_put(fifo_t *fifo, uint8_t c);
+bool fifo_get(fifo_t *fifo, uint8_t *pc);
 int  fifo_avail(fifo_t *fifo);
 int	 fifo_free(fifo_t *fifo);

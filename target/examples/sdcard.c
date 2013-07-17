@@ -25,8 +25,10 @@
 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "type.h"
 #include "debug.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 #include "spi.h"
 
@@ -104,9 +106,9 @@ static ECardType eCardType;
 
 
 // returns an R1 error code
-static U8 SDWaitResp(int iTimeout)
+static uint8_t SDWaitResp(int iTimeout)
 {
-	U8	bResp;
+	uint8_t	bResp;
 	int	i;
 	
 	bResp = 0xFF;
@@ -120,10 +122,10 @@ static U8 SDWaitResp(int iTimeout)
 }
 
 // return extra response data
-static U32 SDExtraResp(int iLen)
+static uint32_t SDExtraResp(int iLen)
 {
-	U8	abResp[4];
-	U32	ulResp;
+	uint8_t	abResp[4];
+	uint32_t	ulResp;
 	int i;
 
 	ASSERT(iLen <= 4);
@@ -137,10 +139,10 @@ static U32 SDExtraResp(int iLen)
 }
 
 // returns an R1 error code
-static U8 SDCommand(U8 bCmd, U32 ulParam)
+static uint8_t SDCommand(uint8_t bCmd, uint32_t ulParam)
 {
-	U8	abBuf[6];
-	U8	bResp;
+	uint8_t	abBuf[6];
+	uint8_t	bResp;
 	
 	// check if card is busy
 	SPITransfer(1, NULL, &bResp);
@@ -163,33 +165,33 @@ static U8 SDCommand(U8 bCmd, U32 ulParam)
 }
 
 // wait for card to initialise
-static BOOL SDSendOpCond(U32 ulOpCond)
+static bool SDSendOpCond(uint32_t ulOpCond)
 {
 	int i;
-	U8	bResp;
+	uint8_t	bResp;
 	
 	// send ACMD41 until ready
 	for (i = 0; i < 1024; i++) {
 		bResp = SDCommand(CMD_APP_CMD, 0);
 		bResp = SDCommand(CMD_SD_SEND_OP_COND, ulOpCond);
 		if (bResp == 0) {
-			return TRUE;
+			return true;
 		}
 	}
 	DBG("CMD_SEND_OP_COND failed\n");
-	return FALSE;
+	return false;
 }
 
 
-static BOOL SDReadDataToken(U8 bType, U8 *pbData, int iLen)
+static bool SDReadDataToken(uint8_t bType, uint8_t *pbData, int iLen)
 {
-	U8	bResp;
+	uint8_t	bResp;
 
 	// wait for data token
 	bResp = SDWaitResp(NAC);
 	if (bResp != bType) {
 		DBG("Expected start block token, got %X instead!\n", bResp);
-		return FALSE;
+		return false;
 	}
 	
 	// read data
@@ -198,13 +200,13 @@ static BOOL SDReadDataToken(U8 bType, U8 *pbData, int iLen)
 	// skip CRC
 	SPITransfer(2, NULL, NULL);
 	
-	return TRUE;
+	return true;
 }
 
 
-static BOOL SDWriteDataToken(U8 bType, const U8 *pbData, int iLen)
+static bool SDWriteDataToken(uint8_t bType, const uint8_t *pbData, int iLen)
 {
-	U8	bResp;
+	uint8_t	bResp;
 
 	// NWR
 	SPITransfer(1, NULL, NULL);
@@ -220,7 +222,7 @@ static BOOL SDWriteDataToken(U8 bType, const U8 *pbData, int iLen)
 	SPITransfer(1, NULL, &bResp);
 	if ((bResp & 0x1F) != 5) {
 		DBG("Received data response error (0x%02X)!\n", bResp);
-		return FALSE;
+		return false;
 	}
 	}
 	
@@ -229,16 +231,16 @@ static BOOL SDWriteDataToken(U8 bType, const U8 *pbData, int iLen)
 		SPITransfer(1, NULL, &bResp);
 	} while (bResp != 0xFF);
 	
-	return TRUE;
+	return true;
 }
 
 
-BOOL SDInit(void)
+bool SDInit(void)
 {
 	int i;
-	U8	bResp;
-	U32	ulOCR;
-	U32 ulData;
+	uint8_t	bResp;
+	uint32_t	ulOCR;
+	uint32_t ulData;
 
 	eCardType = eCardUnknown;
 
@@ -260,7 +262,7 @@ BOOL SDInit(void)
 	}
 	if (bResp != R1_IDLE_STATE) {
 		DBG("CMD_GO_IDLE_STATE failed (0x%02X)!\n", bResp);
-		return FALSE;
+		return false;
 	}
 	
 	// send CMD8
@@ -270,18 +272,18 @@ BOOL SDInit(void)
 		ulData = SDExtraResp(4);
 		if (ulData != 0x1AA) {
 			DBG("CMD8 data 0x%08X\n", ulData);
-			return FALSE;
+			return false;
 		}
 
 		if (!SDSendOpCond(OCR_HCS)) {
 			DBG("SDSendOpCond failed!\n");
-			return FALSE;
+			return false;
 		}
 		
 		// Check CCS bit
 		if (!SDReadOCR(&ulOCR)) {
 			DBG("ReadOCR failed!\n");
-			return FALSE;
+			return false;
 		}
 		eCardType = ((ulOCR & OCR_HCS) != 0) ? eCardSDV2HC : eCardSDV2;
 	}
@@ -289,7 +291,7 @@ BOOL SDInit(void)
 		// Ver1.X SD memory card or other
 		if (!SDSendOpCond(0)) {
 			DBG("SDSendOpCond failed!\n");
-		return FALSE;
+		return false;
 	}
 		eCardType = eCardSDV1;
 	}
@@ -297,20 +299,20 @@ BOOL SDInit(void)
 	// set high SPI speed
 	SPISetSpeed(25000000);
 
-	return TRUE;
+	return true;
 }
 
 
-static U32 SDBlock2Addr(U32 ulBlock)
+static uint32_t SDBlock2Addr(uint32_t ulBlock)
 {
 	return (eCardType == eCardSDV2HC) ? ulBlock : ulBlock * SD_BLOCK_SIZE;
 }
 
 
-BOOL SDReadBlock(U8 *pbData, U32 ulBlock)
+bool SDReadBlock(uint8_t *pbData, uint32_t ulBlock)
 {
-	U32	ulAddr;
-	U8	bResp;
+	uint32_t	ulAddr;
+	uint8_t	bResp;
 	
 	// calculate card address
 	ulAddr = SDBlock2Addr(ulBlock);
@@ -318,24 +320,24 @@ BOOL SDReadBlock(U8 *pbData, U32 ulBlock)
 	// write command
 	if ((bResp = SDCommand(CMD_READ_SINGLE_BLOCK, ulAddr)) != 0) {
 		DBG("CMD_READ_SINGLE_BLOCK failed (0x%02X)!\n", bResp);
-		return FALSE;
+		return false;
 	}
 	
 	// read data token
 	if (!SDReadDataToken(TOKEN_START_BLOCK, pbData, SD_BLOCK_SIZE)) {
 		DBG("SDReadDataToken failed!\n");
-		return FALSE;
+		return false;
 	}
 	
-	return TRUE;
+	return true;
 }
 
 
 
-BOOL SDWriteBlock(const U8 *pbData, U32 ulBlock)
+bool SDWriteBlock(const uint8_t *pbData, uint32_t ulBlock)
 {
-	U32	ulAddr;
-	U8	bResp;
+	uint32_t	ulAddr;
+	uint8_t	bResp;
 	
 	// calculate card address
 	ulAddr = SDBlock2Addr(ulBlock);
@@ -343,70 +345,70 @@ BOOL SDWriteBlock(const U8 *pbData, U32 ulBlock)
 	// write command
 	if ((bResp = SDCommand(CMD_WRITE_BLOCK, ulAddr)) != 0) {
 		DBG("CMD_WRITE_BLOCK failed (0x%02X)!\n", bResp);
-		return FALSE;
+		return false;
 	}
 	
 	// write data token
 	if (!SDWriteDataToken(TOKEN_START_BLOCK, pbData, SD_BLOCK_SIZE)) {
 		DBG("SDWriteDataToken failed!\n");
-		return FALSE;
+		return false;
 	}
 	
-	return TRUE;
+	return true;
 }
 
 
-BOOL SDReadCSD(U8 *pbCSD)
+bool SDReadCSD(uint8_t *pbCSD)
 {
-	U8	bResp;
+	uint8_t	bResp;
 
 	// write command
 	if ((bResp = SDCommand(CMD_SEND_CSD, 0)) != 0) {
 		DBG("CMD_SEND_CSD failed (0x%02X)!\n", bResp);
-		return FALSE;
+		return false;
 	}
 	
 	// wait for data token
 	if (!SDReadDataToken(TOKEN_START_BLOCK, pbCSD, 16)) {
 		DBG("SDReadDataToken failed!\n");
-		return FALSE;
+		return false;
 	}
 	
-	return TRUE;
+	return true;
 }
 	
 	
-BOOL SDReadCID(U8 *pbCID)
+bool SDReadCID(uint8_t *pbCID)
 {
-	U8	bResp;
+	uint8_t	bResp;
 
 	// write command
 	if ((bResp = SDCommand(CMD_SEND_CID, 0)) != 0) {
 		DBG("CMD_SEND_CID failed (0x%02X)!\n", bResp);
-		return FALSE;
+		return false;
 	}
 	
 	// wait for data token
 	if (!SDReadDataToken(TOKEN_START_BLOCK, pbCID, 16)) {
 		DBG("SDReadDataToken failed!\n");
-		return FALSE;
+		return false;
 	}
 
-	return TRUE;
+	return true;
 }
 	
 
-BOOL SDReadOCR(U32 *pulOCR)
+bool SDReadOCR(uint32_t *pulOCR)
 {
-	U8	bResp;
+	uint8_t	bResp;
 
 	// write command
 	if ((bResp = SDCommand(CMD_READ_OCR, 0)) != 0) {
 		DBG("CMD_READ_OCR failed (0x%02X)!\n", bResp);
-		return FALSE;
+		return false;
 	}
 	*pulOCR = SDExtraResp(4);
-	return TRUE;
+	return true;
 }
 
 

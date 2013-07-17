@@ -25,13 +25,14 @@
 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "type.h"
+#include <stdint.h>
+#include <stdbool.h>
 
-BOOL SDInit(void);
-BOOL SDReadCSD(U8 *pbCSD);
-BOOL SDReadCID(U8 *pbCID);
-BOOL SDReadOCR(U32 *pulOCR);
+bool SDInit(void);
+bool SDReadCSD(uint8_t *pbCSD);
+bool SDReadCID(uint8_t *pbCID);
+bool SDReadOCR(uint32_t *pulOCR);
 
-BOOL SDReadBlock(U8 *pbData, U32 ulBlock);
-BOOL SDWriteBlock(const U8 *pbData, U32 ulBlock);
+bool SDReadBlock(uint8_t *pbData, uint32_t ulBlock);
+bool SDWriteBlock(const uint8_t *pbData, uint32_t ulBlock);
 

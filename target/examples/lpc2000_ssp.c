@@ -30,8 +30,10 @@
  *
  */
  
-#include "type.h"
 #include "debug.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 #include "lpc214x.h"
 #include "hal.h"
@@ -54,7 +56,7 @@
 
 /*****************************************************************************/
 
-static BOOL	fInit = FALSE;
+static bool	fInit = false;
 
 
 /*****************************************************************************/
@@ -98,11 +100,11 @@ void SPISetSpeed(int iFrequency)
 }
 
 
-void SPITransfer(int iCount, U8 *pbTxData, U8 *pbRxData)
+void SPITransfer(int iCount, uint8_t *pbTxData, uint8_t *pbRxData)
 {
 	int iRecv;
 	int iXmit;
-	U8 bData;
+	uint8_t bData;
 
 	ASSERT(fInit);
 
@@ -157,7 +159,7 @@ void SPIInit(void)
 	// enable SPI1
 	SSPCR1 |= (1 << 1);		// SSP_SSE;
 
-	fInit = TRUE;
+	fInit = true;
 }
 
 

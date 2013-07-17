@@ -25,10 +25,10 @@
 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "type.h"
 #include "serial_fifo.h"
+#include <stdbool.h>
 
-void fifo_init(fifo_t *fifo, U8 *buf)
+void fifo_init(fifo_t *fifo, uint8_t *buf)
 {
 	fifo->head = 0;
 	fifo->tail = 0;
@@ -36,7 +36,7 @@ void fifo_init(fifo_t *fifo, U8 *buf)
 }
 
 
-BOOL fifo_put(fifo_t *fifo, U8 c)
+bool fifo_put(fifo_t *fifo, uint8_t c)
 {
 	int next;
 	
@@ -44,23 +44,23 @@ BOOL fifo_put(fifo_t *fifo, U8 c)
 	next = (fifo->head + 1) % VCOM_FIFO_SIZE;
 	if (next == fifo->tail) {
 		// full
-		return FALSE;
+		return false;
 	}
 	
 	fifo->buf[fifo->head] = c;
 	fifo->head = next;
 	
-	return TRUE;
+	return true;
 }
 
 
-BOOL fifo_get(fifo_t *fifo, U8 *pc)
+bool fifo_get(fifo_t *fifo, uint8_t *pc)
 {
 	int next;
 	
 	// check if FIFO has data
 	if (fifo->head == fifo->tail) {
-		return FALSE;
+		return false;
 	}
 	
 	next = (fifo->tail + 1) % VCOM_FIFO_SIZE;
@@ -68,7 +68,7 @@ BOOL fifo_get(fifo_t *fifo, U8 *pc)
 	*pc = fifo->buf[fifo->tail];
 	fifo->tail = next;
 
-	return TRUE;
+	return true;
 }
 
 

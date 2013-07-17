@@ -25,9 +25,11 @@
 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <stdint.h>
+
 void	HalSysInit(void);
 int		HalSysGetCCLK(void);
 int		HalSysGetPCLK(void);
 
-void	HalPinSelect(U8 bPin, U8 bFunc);
+void	HalPinSelect(uint8_t bPin, uint8_t bFunc);
 

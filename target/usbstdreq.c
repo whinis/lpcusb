@@ -43,8 +43,10 @@
 	@todo SET_FEATURE, GET_FEATURE 
 */
 
-#include "type.h"
 #include "debug.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 #include "usbstruct.h"
 #include "usbapi.h"
@@ -71,11 +73,11 @@
 
 
 /** Currently selected configuration */
-static U8				bConfiguration = 0;
+static uint8_t				bConfiguration = 0;
 /** Installed custom request handler */
 static TFnHandleRequest	*pfnHandleCustomReq = NULL;
 /** Pointer to registered descriptors */
-static const U8			*pabDescrip = NULL;
+static const uint8_t			*pabDescrip = NULL;
 
 
 /**
@@ -84,7 +86,7 @@ static const U8			*pabDescrip = NULL;
 
 	@param [in]	pabDescriptors	The descriptor byte array
  */
-void USBRegisterDescriptors(const U8 *pabDescriptors)
+void USBRegisterDescriptors(const uint8_t *pabDescriptors)
 {
 	pabDescrip = pabDescriptors;
 }
@@ -99,12 +101,12 @@ void USBRegisterDescriptors(const U8 *pabDescriptors)
 	@param [out]	*piLen		Descriptor length
 	@param [out]	*ppbData	Descriptor data
 	
-	@return TRUE if the descriptor was found, FALSE otherwise
+	@return true if the descriptor was found, false otherwise
  */
-BOOL USBGetDescriptor(U16 wTypeIndex, U16 wLangID, int *piLen, U8 **ppbData)
+bool USBGetDescriptor(uint16_t wTypeIndex, uint16_t wLangID, int *piLen, uint8_t **ppbData)
 {
-	U8	bType, bIndex;
-	U8	*pab;
+	uint8_t	bType, bIndex;
+	uint8_t	*pab;
 	int iCurIndex;
 	
 	ASSERT(pabDescrip != NULL);
@@ -112,7 +114,7 @@ BOOL USBGetDescriptor(U16 wTypeIndex, U16 wLangID, int *piLen, U8 **ppbData)
 	bType = GET_DESC_TYPE(wTypeIndex);
 	bIndex = GET_DESC_INDEX(wTypeIndex);
 	
-	pab = (U8 *)pabDescrip;
+	pab = (uint8_t *)pabDescrip;
 	iCurIndex = 0;
 	
 	while (pab[DESC_bLength] != 0) {
@@ -130,7 +132,7 @@ BOOL USBGetDescriptor(U16 wTypeIndex, U16 wLangID, int *piLen, U8 **ppbData)
 					// normally length is at offset 0
 					*piLen = pab[DESC_bLength];
 				}
-				return TRUE;
+				return true;
 			}
 			iCurIndex++;
 		}
@@ -139,7 +141,7 @@ BOOL USBGetDescriptor(U16 wTypeIndex, U16 wLangID, int *piLen, U8 **ppbData)
 	}
 	// nothing found
 	DBG("Desc %x not found!\n", wTypeIndex);
-	return FALSE;
+	return false;
 }
 
 
@@ -151,26 +153,26 @@ BOOL USBGetDescriptor(U16 wTypeIndex, U16 wLangID, int *piLen, U8 **ppbData)
 	@param [in]		bConfigIndex	Configuration index
 	@param [in]		bAltSetting		Alternate setting number
 	
-	@todo function always returns TRUE, add stricter checking?
+	@todo function always returns true, add stricter checking?
 	
-	@return TRUE if successfully configured, FALSE otherwise
+	@return true if successfully configured, false otherwise
  */
-static BOOL USBSetConfiguration(U8 bConfigIndex, U8 bAltSetting)
+static bool USBSetConfiguration(uint8_t bConfigIndex, uint8_t bAltSetting)
 {
-	U8	*pab;
-	U8	bCurConfig, bCurAltSetting;
-	U8	bEP;
-	U16	wMaxPktSize;
+	uint8_t	*pab;
+	uint8_t	bCurConfig, bCurAltSetting;
+	uint8_t	bEP;
+	uint16_t	wMaxPktSize;
 	
 	ASSERT(pabDescrip != NULL);
 
 	if (bConfigIndex == 0) {
 		// unconfigure device
-		USBHwConfigDevice(FALSE);
+		USBHwConfigDevice(false);
 	}
 	else {
 		// configure endpoints for this configuration/altsetting
-		pab = (U8 *)pabDescrip;
+		pab = (uint8_t *)pabDescrip;
 		bCurConfig = 0xFF;
 		bCurAltSetting = 0xFF;
 
@@ -208,10 +210,10 @@ static BOOL USBSetConfiguration(U8 bConfigIndex, U8 bAltSetting)
 		}
 		
 		// configure device
-		USBHwConfigDevice(TRUE);
+		USBHwConfigDevice(true);
 	}
 
-	return TRUE;
+	return true;
 }
 
 
@@ -222,11 +224,11 @@ static BOOL USBSetConfiguration(U8 bConfigIndex, U8 bAltSetting)
 	@param [in,out]	*piLen		Pointer to data length
 	@param [in,out]	ppbData		Data buffer.
 
-	@return TRUE if the request was handled successfully
+	@return true if the request was handled successfully
  */
-static BOOL HandleStdDeviceReq(TSetupPacket *pSetup, int *piLen, U8 **ppbData)
+static bool HandleStdDeviceReq(TSetupPacket *pSetup, int *piLen, uint8_t **ppbData)
 {
-	U8	*pbData = *ppbData;
+	uint8_t	*pbData = *ppbData;
 
 	switch (pSetup->bRequest) {
 	
@@ -255,7 +257,7 @@ static BOOL HandleStdDeviceReq(TSetupPacket *pSetup, int *piLen, U8 **ppbData)
 	case REQ_SET_CONFIGURATION:
 		if (!USBSetConfiguration(pSetup->wValue & 0xFF, 0)) {
 			DBG("USBSetConfiguration failed!\n");
-			return FALSE;
+			return false;
 		}
 		// configuration successful, update current configuration
 		bConfiguration = pSetup->wValue & 0xFF;	
@@ -269,18 +271,18 @@ static BOOL HandleStdDeviceReq(TSetupPacket *pSetup, int *piLen, U8 **ppbData)
 		if (pSetup->wValue == FEA_TEST_MODE) {
 			// put TEST_MODE code here
 		}
-		return FALSE;
+		return false;
 
 	case REQ_SET_DESCRIPTOR:
 		DBG("Device req %d not implemented\n", pSetup->bRequest);
-		return FALSE;
+		return false;
 
 	default:
 		DBG("Illegal device req %d\n", pSetup->bRequest);
-		return FALSE;
+		return false;
 	}
 	
-	return TRUE;
+	return true;
 }
 
 
@@ -291,11 +293,11 @@ static BOOL HandleStdDeviceReq(TSetupPacket *pSetup, int *piLen, U8 **ppbData)
 	@param [in,out]	*piLen		Pointer to data length
 	@param [in]		ppbData		Data buffer.
 
-	@return TRUE if the request was handled successfully
+	@return true if the request was handled successfully
  */
-static BOOL HandleStdInterfaceReq(TSetupPacket	*pSetup, int *piLen, U8 **ppbData)
+static bool HandleStdInterfaceReq(TSetupPacket	*pSetup, int *piLen, uint8_t **ppbData)
 {
-	U8	*pbData = *ppbData;
+	uint8_t	*pbData = *ppbData;
 
 	switch (pSetup->bRequest) {
 
@@ -309,7 +311,7 @@ static BOOL HandleStdInterfaceReq(TSetupPacket	*pSetup, int *piLen, U8 **ppbData
 	case REQ_CLEAR_FEATURE:
 	case REQ_SET_FEATURE:
 		// not defined for interface
-		return FALSE;
+		return false;
 	
 	case REQ_GET_INTERFACE:	// TODO use bNumInterfaces
         // there is only one interface, return n-1 (= 0)
@@ -320,17 +322,17 @@ static BOOL HandleStdInterfaceReq(TSetupPacket	*pSetup, int *piLen, U8 **ppbData
 	case REQ_SET_INTERFACE:	// TODO use bNumInterfaces
 		// there is only one interface (= 0)
 		if (pSetup->wValue != 0) {
-			return FALSE;
+			return false;
 		}
 		*piLen = 0;
 		break;
 
 	default:
 		DBG("Illegal interface req %d\n", pSetup->bRequest);
-		return FALSE;
+		return false;
 	}
 
-	return TRUE;
+	return true;
 }
 
 
@@ -341,11 +343,11 @@ static BOOL HandleStdInterfaceReq(TSetupPacket	*pSetup, int *piLen, U8 **ppbData
 	@param [in,out]	*piLen		Pointer to data length
 	@param [in]		ppbData		Data buffer.
 
-	@return TRUE if the request was handled successfully
+	@return true if the request was handled successfully
  */
-static BOOL HandleStdEndPointReq(TSetupPacket	*pSetup, int *piLen, U8 **ppbData)
+static bool HandleStdEndPointReq(TSetupPacket	*pSetup, int *piLen, uint8_t **ppbData)
 {
-	U8	*pbData = *ppbData;
+	uint8_t	*pbData = *ppbData;
 
 	switch (pSetup->bRequest) {
 	case REQ_GET_STATUS:
@@ -358,31 +360,31 @@ static BOOL HandleStdEndPointReq(TSetupPacket	*pSetup, int *piLen, U8 **ppbData)
 	case REQ_CLEAR_FEATURE:
 		if (pSetup->wValue == FEA_ENDPOINT_HALT) {
 			// clear HALT by unstalling
-			USBHwEPStall(pSetup->wIndex, FALSE);
+			USBHwEPStall(pSetup->wIndex, false);
 			break;
 		}
 		// only ENDPOINT_HALT defined for endpoints
-		return FALSE;
+		return false;
 	
 	case REQ_SET_FEATURE:
 		if (pSetup->wValue == FEA_ENDPOINT_HALT) {
 			// set HALT by stalling
-			USBHwEPStall(pSetup->wIndex, TRUE);
+			USBHwEPStall(pSetup->wIndex, true);
 			break;
 		}
 		// only ENDPOINT_HALT defined for endpoints
-		return FALSE;
+		return false;
 
 	case REQ_SYNCH_FRAME:
 		DBG("EP req %d not implemented\n", pSetup->bRequest);
-		return FALSE;
+		return false;
 
 	default:
 		DBG("Illegal EP req %d\n", pSetup->bRequest);
-		return FALSE;
+		return false;
 	}
 	
-	return TRUE;
+	return true;
 }
 
 
@@ -395,20 +397,20 @@ static BOOL HandleStdEndPointReq(TSetupPacket	*pSetup, int *piLen, U8 **ppbData)
 	@param [in,out]	*piLen		Pointer to data length
 	@param [in]		ppbData		Data buffer.
 
-	@return TRUE if the request was handled successfully
+	@return true if the request was handled successfully
  */
-BOOL USBHandleStandardRequest(TSetupPacket	*pSetup, int *piLen, U8 **ppbData)
+bool USBHandleStandardRequest(TSetupPacket	*pSetup, int *piLen, uint8_t **ppbData)
 {
 	// try the custom request handler first
 	if ((pfnHandleCustomReq != NULL) && pfnHandleCustomReq(pSetup, piLen, ppbData)) {
-		return TRUE;
+		return true;
 	}
 	
 	switch (REQTYPE_GET_RECIP(pSetup->bmRequestType)) {
 	case REQTYPE_RECIP_DEVICE:		return HandleStdDeviceReq(pSetup, piLen, ppbData);
 	case REQTYPE_RECIP_INTERFACE:	return HandleStdInterfaceReq(pSetup, piLen, ppbData);
 	case REQTYPE_RECIP_ENDPOINT: 	return HandleStdEndPointReq(pSetup, piLen, ppbData);
-	default: 						return FALSE;
+	default: 						return false;
 	}
 }
 

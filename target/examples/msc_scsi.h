@@ -25,8 +25,9 @@
 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "type.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 void	SCSIReset(void);
-U8 *	SCSIHandleCmd(U8 *pbCDB, U8 bCDBLen, int *piRspLen, BOOL *pfDevIn);
-U8 *	SCSIHandleData(U8 *pbCDB, U8 bCDBLen, U8 *pbData, U32 dwOffset);
+uint8_t *	SCSIHandleCmd(uint8_t *pbCDB, uint8_t bCDBLen, int *piRspLen, bool *pfDevIn);
+uint8_t *	SCSIHandleData(uint8_t *pbCDB, uint8_t bCDBLen, uint8_t *pbData, uint32_t dwOffset);

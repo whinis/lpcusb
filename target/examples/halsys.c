@@ -35,8 +35,8 @@
                   Header files
  **********************************************************/
 
-#include "type.h"
 #include "debug.h"
+#include <stdint.h>
 
 #include "hal.h"
 
@@ -186,7 +186,7 @@ void HalSysInit(void)
 }
 
 
-void HalSysPinSelect(U8 bPin, U8 bFunc)
+void HalSysPinSelect(uint8_t bPin, uint8_t bFunc)
 {
 	if (bPin < 16) {
 		PINSEL0 = (PINSEL0 & ~(3 << (2 * bPin))) | (bFunc << (2 * bPin));
@@ -210,7 +210,7 @@ int HalSysGetPCLK(void)
 }
 
 
-void HalPinSelect(U8 bPin, U8 bFunc)
+void HalPinSelect(uint8_t bPin, uint8_t bFunc)
 {
 	if (bPin < 16) {
 		PINSEL0 = (PINSEL0 & ~(3 << (2 * bPin))) | (bFunc << (2 * bPin));

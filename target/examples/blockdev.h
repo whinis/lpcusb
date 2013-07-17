@@ -25,12 +25,12 @@
 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "type.h"
+#include <stdbool.h>
 
 
-BOOL BlockDevInit(void);
+bool BlockDevInit(void);
 
-BOOL BlockDevWrite(U32 dwBlock, U8* pbBuf);
-BOOL BlockDevRead(U32 dwBlock, U8* pbBuf);
+bool BlockDevWrite(uint32_t dwBlock, uint8_t* pbBuf);
+bool BlockDevRead(uint32_t dwBlock, uint8_t* pbBuf);
 
-BOOL BlockDevGetSize(U32 *pdwDriveSize);
+bool BlockDevGetSize(uint32_t *pdwDriveSize);
