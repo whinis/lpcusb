@@ -110,6 +110,27 @@ bool USBHandleStandardRequest(TSetupPacket *pSetup, int *piLen, uint8_t **ppbDat
 void USBHandleControlTransfer(uint8_t bEP, uint8_t bEPStat);
 
 /** Descriptor handling */
+void setDeviceDescriptor(TUSBDeviceDescriptor desc);
+void expandDescriptor(uint8_t size);
+
+void expandConfigDescriptor(uint8_t size);
+
+void initConfigDescriptor(TUSBConfiguration desc);
+
+void finalizeConfigDescriptor(void);
+
+void expandInterfaceDescriptor(uint8_t size);
+
+void initInterfaceDescriptor(TUSBInterfaceDescriptor desc);
+
+void finalizeInterfaceDescriptor(void);
+
+void addEndpointDescriptor(TUSBEndpointDescriptor desc);
+
+void addStringDescriptor(char *string, uint8_t len);
+
+void setUSBDescriptor(void);
+
 void USBRegisterDescriptors(const uint8_t *pabDescriptors);
 bool USBGetDescriptor(uint16_t wTypeIndex, uint16_t wLangID, int *piLen, uint8_t **ppbData);
 
