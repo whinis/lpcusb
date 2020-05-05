@@ -33,6 +33,9 @@
 #include "usbstruct.h"		// for TSetupPacket
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 /*************************************************************************
 	USB configuration
@@ -127,7 +130,10 @@ void finalizeInterfaceDescriptor(void);
 
 void addEndpointDescriptor(TUSBEndpointDescriptor desc);
 
-void addStringDescriptor(char *string, uint8_t len);
+void addFunctionalDescriptor(TUSBFunctionalDescriptor desc);
+
+void addStringDescriptor(uint16_t *string, uint8_t len);
+void addStringDescriptorChar(char *string, uint8_t len);
 
 void setUSBDescriptor(void);
 

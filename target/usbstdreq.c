@@ -89,6 +89,8 @@ uint16_t descriptorSize = 0; //hold the size of the descriptor pointer
 uint16_t configSize = 0;	//hold the size of the config pointer
 uint16_t interfaceSize = 0;	//hold the size of the interface pointer
 uint16_t stringSize = 0;	//hold the size of the string pointer
+uint8_t configNum = 1;
+uint8_t interfaceNum = 0;
 
 
 /**
@@ -100,7 +102,10 @@ void setDeviceDescriptor(TUSBDeviceDescriptor desc)
 {
 	USBDescriptor = (uint8_t*)malloc(0x12);
 	memcpy(USBDescriptor, &desc, 0x12);
+	USBDescriptor[0] = 0x12;
+	USBDescriptor[1] = 0x01;
 	descriptorSize = 0x12;
+	configNum = 1;
 }
 
 
@@ -134,7 +139,12 @@ void initConfigDescriptor(TUSBConfiguration desc)
 	USBConfigDescriptor = (uint8_t*)malloc(0x09);
 	memcpy(USBConfigDescriptor, &desc, 0x09);
 	configSize = 0x09;
+	interfaceNum = 0;
+	USBConfigDescriptor[0] = 0x09;
+	USBConfigDescriptor[1] = 0x02;
 	USBConfigDescriptor[4] = 0;
+	USBConfigDescriptor[5] = configNum;
+	configNum++;
 }
 
 /**
@@ -149,8 +159,7 @@ void finalizeConfigDescriptor()
 	{
 		expandDescriptor(configSize);  //expand memory if new config added
 	}
-	USBConfigDescriptor[2] = configSize;
-	USBConfigDescriptor[3] = configSize << 8;
+	memcpy(&USBConfigDescriptor[2], &configSize, 2);
 	memcpy(USBDescriptor + descriptorSize - configSize, USBConfigDescriptor, configSize);
 	free(USBConfigDescriptor);
 	USBConfigDescriptor = NULL;
@@ -177,6 +186,11 @@ void initInterfaceDescriptor(TUSBInterfaceDescriptor desc)
 {
 	USBInterfaceDescriptor = (uint8_t*)malloc(0x09);
 	memcpy(USBInterfaceDescriptor, &desc, 0x09);
+	USBInterfaceDescriptor[0] = 0x09;
+	USBInterfaceDescriptor[1] = 0x04;
+	USBInterfaceDescriptor[2] = USBConfigDescriptor[4];
+	interfaceSize = 0x09;
+	USBConfigDescriptor[4]++;
 	USBInterfaceDescriptor[4] = 0;
 }
 
@@ -190,9 +204,9 @@ void finalizeInterfaceDescriptor()
 		return; //this should never be here. something is not setup, just return
 	else
 	{
-		expandConfigDescriptor(configSize);   //expand memory if new config added
+		expandConfigDescriptor(interfaceSize);    //expand memory if new config added
 	}
-	memcpy(USBConfigDescriptor + configSize - interfaceSize, USBInterfaceDescriptor, interfaceSize);
+	memcpy(USBConfigDescriptor + configSize - interfaceSize , USBInterfaceDescriptor, interfaceSize);
 	free(USBInterfaceDescriptor);
 	USBInterfaceDescriptor = NULL;
 }
@@ -203,15 +217,29 @@ void finalizeInterfaceDescriptor()
  */
 void addEndpointDescriptor(TUSBEndpointDescriptor desc)
 {
-	if (USBDescriptor == NULL || (USBDescriptor[3] + (USBDescriptor[4] << 8)) < 1)
+	if (USBInterfaceDescriptor == NULL )
 		return; //this should never be here. something is not setup, just return
 	else
 	{
 		expandInterfaceDescriptor(0x07);   //expand memory for new endpoint
 	}
-	memcpy(USBInterfaceDescriptor + interfaceSize - 0x07, &desc, 0x07);
+	memcpy(USBInterfaceDescriptor + interfaceSize - 0x07 , &desc, 0x07);
+	USBInterfaceDescriptor[interfaceSize - 0x07] = 0x07;
+	USBInterfaceDescriptor[interfaceSize - 0x07 + 1] = 0x05;
 	USBInterfaceDescriptor[4]++;
-	configSize += 0x07;
+}
+
+void addFunctionalDescriptor(TUSBFunctionalDescriptor desc)
+{
+	if (USBInterfaceDescriptor == NULL)
+		return; //this should never be here. something is not setup, just return
+	else
+	{
+		expandInterfaceDescriptor(desc.bLength);    //expand memory for new endpoint
+	}
+	memcpy(USBInterfaceDescriptor + interfaceSize - desc.bLength + 2, &desc.data, desc.bLength-2);
+	USBInterfaceDescriptor[interfaceSize - desc.bLength] = desc.bLength;
+	USBInterfaceDescriptor[interfaceSize - desc.bLength + 1] = desc.bDescriptorType;
 }
 
 /**
@@ -220,13 +248,26 @@ void addEndpointDescriptor(TUSBEndpointDescriptor desc)
 	@param [in]	string	pointer to string
 	@param [in]	len	length of string
  */
-void addStringDescriptor(char *string,uint8_t len)
+void addStringDescriptor(uint16_t *string,uint8_t len)
 {
 	USBStringDescriptors = realloc(USBStringDescriptors, stringSize +len + 2);
 	USBStringDescriptors[stringSize] = len;
 	USBStringDescriptors[stringSize+1]	= 0x03;
 	memcpy(&USBStringDescriptors[stringSize + 2], string, len);
 	stringSize += len + 2;
+}
+
+void addStringDescriptorChar(char *string, uint8_t len)
+{
+	USBStringDescriptors = realloc(USBStringDescriptors, stringSize + (len*2) + 2);
+	USBStringDescriptors[stringSize] = len*2;
+	USBStringDescriptors[stringSize + 1]	= 0x03;
+	for (int i = 0; i < len*2; i+=2)
+	{
+		USBStringDescriptors[stringSize + 1 + i] = string[i];
+		USBStringDescriptors[stringSize + 1 + i +1] = 0;
+	}
+	stringSize += (len*2) + 2;
 }
 
 

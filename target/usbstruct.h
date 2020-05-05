@@ -103,6 +103,14 @@ typedef struct
 {
 	uint8_t	bLength; /**< descriptor length */
 	uint8_t	bDescriptorType; /**< descriptor type always 0x05 */
+	uint8_t data[10];
+	
+}TUSBFunctionalDescriptor;
+
+typedef struct
+{
+	uint8_t	bLength; /**< descriptor length */
+	uint8_t	bDescriptorType; /**< descriptor type always 0x05 */
 	uint8_t bEndpointAddress; /**
 	**	Bits 0..3b Endpoint Number.
 		Bits 4..6b Reserved. Set to Zero
@@ -131,7 +139,7 @@ Bits 5..4 = Usage Type (Iso Mode)
     10 = Explicit Feedback Data Endpoint
     11 = Reserved*/
 	
-	uint8_t wMaxPacketSize; /**  Maximum Packet Size this endpoint is capable of sending or receiving*/
+	uint8_t wMaxPacketSize[2]; /**  Maximum Packet Size this endpoint is capable of sending or receiving*/
 	uint8_t bInterval; /**  	
 	**Interval for polling endpoint data transfers. Value in frame counts.
 	**Ignored for Bulk & Control Endpoints. Isochronous must equal 1 and 
@@ -218,6 +226,7 @@ typedef struct
 #define DESC_DEVICE_QUALIFIER	6
 #define DESC_OTHER_SPEED		7
 #define DESC_INTERFACE_POWER	8
+
 
 #define DESC_HID_HID			0x21
 #define DESC_HID_REPORT			0x22
